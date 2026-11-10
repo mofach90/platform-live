@@ -24,4 +24,4 @@ terraform.rc
 __pycache__/
 
 # custom 
-platform-live/docs/journal.md
+./docs/journal.md
