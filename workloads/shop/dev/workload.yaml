@@ -1,0 +1,10 @@
+apiVersion: platform.demo/v1
+kind: Workload
+metadata: { team: shop, env: dev }
+spec:
+  project: shop-dev       # must exist in platform/dev.yaml and belong to team "shop"
+  vmGroups:
+    - name: web           # renaming a group = destroy + create
+      count: 2            # 1..5
+      size: small         # small | medium | large
+      image: debian-12    # allow-list
