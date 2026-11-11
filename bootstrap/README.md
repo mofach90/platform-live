@@ -40,6 +40,9 @@ Commit `backend.tf`.
 1. Landing zone creates the project (`docs/landing-zone-sim.md`).
 2. PR: add it to `platform/dev.yaml`.
 3. After the merge, a human runs `terraform apply` here (adds the two grants).
+4. The same human runs `make plan LAYER=10-baseline PROJECT=<key>` and
+   `make plan LAYER=20-workload PROJECT=<key>` once. The first plan of a new state
+   creates an empty state file, and the PR identity (`ci-plan`) is read-only on the bucket.
 
 ## Do not destroy
 A deleted workload identity pool stays soft-deleted for 30 days and its ID
