@@ -21,24 +21,23 @@
   `GOOGLE_APPLICATION_CREDENTIALS` (ADR 0002 #1, journal).
 
 ## In progress
-- Step 2 applied by the human (baseline for shop-dev: 9 added) — code **not committed yet**.
-- Step 3 written: `modules/vm-group`, `layers/20-workload`, `workloads/shop/dev/workload.yaml` (web, 2 × small).
-  `make plan LAYER=20-workload PROJECT=shop-dev` → 5 to add (2 VMs, 1 service account, 2 role bindings).
-  Invalid `size`, `count` and `spec.project` give file/field/value/allowed messages. **Not applied, not committed.**
+- Steps 2 + 3 done and committed (9b9755f, 0ee93d7): baseline applied for shop-dev; workload layer plans 5 to add.
+- Step 4 written, **not committed, never run**: `.github/workflows/pr.yml` (validate → matrix → plan per
+  project as ci-plan → one updated PR comment), `scripts/changed_projects.py` (matrix, needs `yq`),
+  onboarding note in `bootstrap/README.md` (human runs the first plan of a new state).
+  Actions pinned by SHA. Only a real pull request can prove the workflow works.
 
 ## Next
-1. Human: commit steps 2 + 3; delete the stray test state
-   `gs://platform-project-dev-514319-tfstate/baseline/payments-dev/default.tfstate`.
-2. Step 4: `.github/workflows/pr.yml` — validate → changed-projects matrix → plans → one PR comment.
-   Needs the design choice for the first plan of a new state (see below) and actions pinned by SHA.
-3. Step 5: `apply.yml` (must keep this file name — WIF binding) → first VMs via CI; test IAP SSH.
+1. Human: commit + push step 4, open a test PR that touches `workloads/shop/dev/workload.yaml`;
+   done when the PR shows one readable plan comment (5 to add). Fix what the first run shows.
+2. Step 5: `apply.yml` (must keep this file name — WIF binding) → first VMs via CI; test IAP SSH.
+3. Step 6: `scripts/validate_workloads.py` (schema + registry + path, all errors at once, plain text).
 
 ## Blocked / open questions
 - **Human:** protect `main` on GitHub (PR + review, "Require review from Code Owners") — the
   `refs/heads/main` condition on ci-apply is worthless without it.
-- **Known problem for step 4:** the GCS backend writes an empty state on the first plan of a new state
-  (seen live: a plan for an unregistered key left `baseline/payments-dev/default.tfstate`);
-  `ci-plan` is read-only on the bucket, so the first PR plan for a new project fails. Needs a design choice.
+- Decided: the first plan of a new state is run by a human at onboarding (`bootstrap/README.md`), because
+  the GCS backend writes an empty state then and `ci-plan` stays read-only on the bucket.
 - `scripts/validate_workloads.py` (schema + registry check) is not written yet; `make validate` skips it.
 - **After the talk:** the local gcloud login uses a super-admin account; switch to a normal admin user.
 - **Optional cleanup:** `default` VPC with open SSH/RDP firewall rules exists in the platform project.
