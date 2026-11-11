@@ -21,22 +21,25 @@
   `GOOGLE_APPLICATION_CREDENTIALS` (ADR 0002 #1, journal).
 
 ## In progress
-- nothing
+- Step 2 applied by the human (baseline for shop-dev: 9 added) — code **not committed yet**.
+- Step 3 written: `modules/vm-group`, `layers/20-workload`, `workloads/shop/dev/workload.yaml` (web, 2 × small).
+  `make plan LAYER=20-workload PROJECT=shop-dev` → 5 to add (2 VMs, 1 service account, 2 role bindings).
+  Invalid `size`, `count` and `spec.project` give file/field/value/allowed messages. **Not applied, not committed.**
 
 ## Next
-1. Human: commit the rest of step 1 (`platform/dev.yaml`, ADR 0002, Makefile, AGENTS.md, PLAN.md, STATUS.md).
-2. Step 2: `schema/environment.schema.json` + `layers/10-baseline` (APIs, VPC, subnet with Private
-   Google Access, router + NAT, IAP firewall, OS Login); wire `make plan`. Human applies once via `deployer@`.
-3. Step 3: `modules/vm-group` + `layers/20-workload`.
+1. Human: commit steps 2 + 3; delete the stray test state
+   `gs://platform-project-dev-514319-tfstate/baseline/payments-dev/default.tfstate`.
+2. Step 4: `.github/workflows/pr.yml` — validate → changed-projects matrix → plans → one PR comment.
+   Needs the design choice for the first plan of a new state (see below) and actions pinned by SHA.
+3. Step 5: `apply.yml` (must keep this file name — WIF binding) → first VMs via CI; test IAP SSH.
 
 ## Blocked / open questions
 - **Human:** protect `main` on GitHub (PR + review, "Require review from Code Owners") — the
   `refs/heads/main` condition on ci-apply is worthless without it.
-- **Decide (PLAN §3, before step 2):** impersonate `planner@`/`deployer@` through the provider
-  argument `impersonate_service_account`, not `GOOGLE_IMPERSONATE_SERVICE_ACCOUNT` — the GCS backend
-  reads that variable too and the team SAs have no access to the state bucket.
-- **Known problem for step 4:** the GCS backend writes an empty state on first init of a new state;
+- **Known problem for step 4:** the GCS backend writes an empty state on the first plan of a new state
+  (seen live: a plan for an unregistered key left `baseline/payments-dev/default.tfstate`);
   `ci-plan` is read-only on the bucket, so the first PR plan for a new project fails. Needs a design choice.
+- `scripts/validate_workloads.py` (schema + registry check) is not written yet; `make validate` skips it.
 - **After the talk:** the local gcloud login uses a super-admin account; switch to a normal admin user.
 - **Optional cleanup:** `default` VPC with open SSH/RDP firewall rules exists in the platform project.
 - **Scope:** freeze is Thu 12:00. Must-have: steps 2–6 + 13. Slides-only if late: 7, 8–10, 12.
