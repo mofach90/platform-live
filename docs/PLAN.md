@@ -32,7 +32,7 @@ GitHub: platform-live
  │           → one PR comment (updated, not duplicated)
  │  apply.yml (main): matrix baseline → matrix workload, concurrency per project+layer
  │
- └─ WIF (GitHub OIDC) ─► platform project <PLATFORM_PROJECT_ID>
+ └─ WIF (GitHub OIDC) ─► platform project platform-project-dev-514319
                           ci-plan  ──impersonates──► planner@<team project>   (read)
                           ci-apply ──impersonates──► deployer@<team project>  (write, main only)
                           state bucket: baseline/<key>, workload/<key>
@@ -55,12 +55,12 @@ radius per tenant. (Same reason large platforms "fan out".)
 apiVersion: platform.demo/v1
 kind: Environment
 environment: dev
-platformProject: <PLATFORM_PROJECT_ID>
-region: <REGION>
-stateBucket: <PLATFORM_PROJECT_ID>-tfstate
+platformProject: platform-project-dev-514319
+region: europe-west10
+stateBucket: platform-project-dev-514319-tfstate
 projects:
   shop-dev:                          # project key used by workloads
-    projectId: <SHOP_DEV_PROJECT_ID> # created by the landing zone
+    projectId: shop-dev-7d94 # created by the landing zone
     team: shop
     network: { cidr: 10.10.0.0/24 }
 ```
@@ -85,7 +85,7 @@ rules in `scripts/validate_workloads.py`, (3) Terraform `validation`/`preconditi
 ### Identity
 - WIF pool `github`, provider `github-oidc`, issuer
   `https://token.actions.githubusercontent.com`, attribute condition
-  `assertion.repository == '<GITHUB_OWNER>/platform-live'`, mapped attributes
+  `assertion.repository == 'mofach90/platform-live'`, mapped attributes
   include `attribute.ref`.
 - `ci-plan`: any branch/PR; `storage.objectViewer` on state bucket;
   `serviceAccountTokenCreator` on every `planner@`. Plans run with `-lock=false`.
@@ -124,14 +124,14 @@ SonarQube for app code, drift detection, offboarding.
 ## 6. Day-1 checks (human runs; agents prepare commands)
 ```bash
 gcloud auth login && gcloud auth application-default login
-gcloud config set project <PLATFORM_PROJECT_ID>
-gcloud org-policies list --organization=<ORG_ID>
-gcloud org-policies describe iam.allowedPolicyMemberDomains --organization=<ORG_ID>    # may block WIF principals
-gcloud org-policies describe iam.workloadIdentityPoolProviders --organization=<ORG_ID> # allowed OIDC issuers
-gcloud org-policies describe compute.trustedImageProjects --organization=<ORG_ID>
-gcloud org-policies describe compute.vmExternalIpAccess --organization=<ORG_ID>
-gcloud compute machine-types list --filter="zone~<REGION> AND name~'^e2-(small|medium|standard-2)$'"
-gcloud billing projects list --billing-account=<BILLING_ACCOUNT_ID>   # how many projects already linked
+gcloud config set project platform-project-dev-514319
+gcloud org-policies list --organization=$ORG_ID
+gcloud org-policies describe iam.allowedPolicyMemberDomains --organization=$ORG_ID    # may block WIF principals
+gcloud org-policies describe iam.workloadIdentityPoolProviders --organization=$ORG_ID # allowed OIDC issuers
+gcloud org-policies describe compute.trustedImageProjects --organization=$ORG_ID
+gcloud org-policies describe compute.vmExternalIpAccess --organization=$ORG_ID
+gcloud compute machine-types list --filter="zone~europe-west10 AND name~'^e2-(small|medium|standard-2)$'"
+gcloud billing projects list --billing-account=$BILLING_ACCOUNT_ID   # how many projects already linked
 gcloud services enable iam.googleapis.com iamcredentials.googleapis.com sts.googleapis.com \
   cloudresourcemanager.googleapis.com storage.googleapis.com serviceusage.googleapis.com
 ```

@@ -31,9 +31,14 @@ scripts/                   validate_workloads.py (friendly errors), changed_proj
 docs/                      PLAN, STATUS, journal, decisions/, landing-zone-sim.md
 ```
 
-## Placeholders (fill in once, then delete this section)
-`<GITHUB_OWNER>` `<PLATFORM_PROJECT_ID>` `<REGION>` `<ORG_ID>` `<BILLING_ACCOUNT_ID>`
-`<TEAMS_FOLDER_ID>` `<SHOP_DEV_PROJECT_ID>` (+ second team project, optional)
+## Placeholders and local values
+Team projects (created via `docs/landing-zone-sim.md`): shop-dev = `shop-dev-7d94` (second team project optional).
+Org, folder and billing IDs never go into this public repo: commands use `$ORG_ID`,
+`$NONPROD_FOLDER_ID`, `$TEAMS_FOLDER_ID`, `$BILLING_ACCOUNT_ID` from the gitignored
+`.env` (template: `.env.example`). `.envrc` (direnv) loads `.env` and sets
+`CLOUDSDK_CONFIG=$HOME/.config/gcloud-devfest`, so the demo never touches other gcloud
+configs or ADC. Agents: direnv does not run in your shell — export `CLOUDSDK_CONFIG`
+yourself before any `gcloud`/`terraform` command (the Makefile does it for make targets).
 
 ## Hard rules
 1. NEVER run `terraform apply/destroy/import/state rm`, or any `gcloud`/`gsutil`

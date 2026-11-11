@@ -4,8 +4,8 @@ This folder is a WORKSPACE, not a git repository. It contains two independent re
 
 | Folder | Repo | Purpose |
 |--------|------|---------|
-| `platform-live/` | `<GITHUB_OWNER>/platform-live` | what runs: bootstrap, registry, layers, team workloads, CI, **all project docs** |
-| `platform-modules/` | `<GITHUB_OWNER>/platform-modules` | versioned Terraform modules (semantic-release tags) |
+| `platform-live/` | `mofach90/platform-live` | what runs: bootstrap, registry, layers, team workloads, CI, **all project docs** |
+| `platform-modules/` | `mofach90/platform-modules` | versioned Terraform modules (semantic-release tags) |
 
 ## Start of every session
 1. Read `platform-live/AGENTS.md` (main rules) and `platform-modules/AGENTS.md`.
