@@ -17,6 +17,8 @@ TF_DIRS := $(sort $(dir $(shell find bootstrap layers modules -name '*.tf' -not 
 
 LAYER ?=
 PROJECT ?=
+# planner (read-only) for plans; the first local apply passes identity=deployer by hand.
+IDENTITY ?= planner
 
 .PHONY: help fmt fmt-check validate lint scan plan check
 
@@ -48,7 +50,9 @@ scan: ## trivy config + gitleaks
 
 plan: ## init + plan -lock=false for one project: make plan LAYER=20-workload PROJECT=shop-dev
 	@test -n "$(LAYER)" && test -n "$(PROJECT)" || { echo "usage: make plan LAYER=<10-baseline|20-workload> PROJECT=<key in platform/dev.yaml>"; exit 2; }
-	@test -d layers/$(LAYER) || { echo "plan: layers/$(LAYER) does not exist yet (PLAN step 2/3)"; exit 2; }
-	@echo "plan: wired up together with the first layer (PLAN step 2)"; exit 2
+	@test -d layers/$(LAYER) || { echo "plan: layers/$(LAYER) does not exist (have: $$(ls layers | tr '\n' ' '))"; exit 2; }
+	@set -e; layer="$(LAYER)"; \
+	terraform -chdir=layers/$(LAYER) init -reconfigure -input=false -backend-config="prefix=$${layer#*-}/$(PROJECT)" >/dev/null; \
+	terraform -chdir=layers/$(LAYER) plan -lock=false -input=false -var project_key=$(PROJECT) -var identity=$(IDENTITY)
 
 check: fmt-check validate lint scan ## run before finishing (same as CI)

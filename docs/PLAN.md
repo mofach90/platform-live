@@ -46,8 +46,11 @@ GitHub: platform-modules  (from step 8)
 ### Why per-project runs (matrix) for baseline AND workload
 Each project is reached through its own impersonated SA. A Terraform provider's
 identity is fixed per provider block and cannot vary inside one `for_each`, so
-the pipeline runs one Terraform execution per project and sets
-`GOOGLE_IMPERSONATE_SERVICE_ACCOUNT` per run. Bonus: separate state and blast
+the pipeline runs one Terraform execution per project and passes the identity
+(`planner` or `deployer`) as a variable into the provider's
+`impersonate_service_account` argument. Not the environment variable
+`GOOGLE_IMPERSONATE_SERVICE_ACCOUNT`: the GCS state backend reads it too, and the
+team SAs have no access to the state bucket. Bonus: separate state and blast
 radius per tenant. (Same reason large platforms "fan out".)
 
 ### Registry (`platform/dev.yaml`)
