@@ -89,7 +89,8 @@ rules in `scripts/validate_workloads.py`, (3) Terraform `validation`/`preconditi
   include `attribute.ref`.
 - `ci-plan`: any branch/PR; `storage.objectViewer` on state bucket;
   `serviceAccountTokenCreator` on every `planner@`. Plans run with `-lock=false`.
-- `ci-apply`: only `attribute.ref == refs/heads/main`; `storage.objectAdmin`
+- `ci-apply`: only `attribute.workflow_ref == mofach90/platform-live/.github/workflows/apply.yml@refs/heads/main`
+  (the apply workflow on main, ADR 0002 #7); `storage.objectAdmin`
   on state bucket; `serviceAccountTokenCreator` on every `deployer@`.
 - `main` is protected (PR + review required) — otherwise the ref condition is worthless.
 - Humans locally: own ADC, may impersonate `planner@` for `make plan`.

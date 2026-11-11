@@ -36,8 +36,10 @@ Team projects (created via `docs/landing-zone-sim.md`): shop-dev = `shop-dev-7d9
 Org, folder and billing IDs never go into this public repo: commands use `$ORG_ID`,
 `$NONPROD_FOLDER_ID`, `$TEAMS_FOLDER_ID`, `$BILLING_ACCOUNT_ID` from the gitignored
 `.env` (template: `.env.example`). `.envrc` (direnv) loads `.env` and sets
-`CLOUDSDK_CONFIG=$HOME/.config/gcloud-devfest`, so the demo never touches other gcloud
-configs or ADC. Agents: direnv does not run in your shell — export `CLOUDSDK_CONFIG`
+`CLOUDSDK_CONFIG=$HOME/.config/gcloud-devfest` and
+`GOOGLE_APPLICATION_CREDENTIALS=$CLOUDSDK_CONFIG/application_default_credentials.json`, so the
+demo never touches other gcloud configs or ADC. Both are needed: gcloud reads the first,
+Terraform only the second. Agents: direnv does not run in your shell — export both
 yourself before any `gcloud`/`terraform` command (the Makefile does it for make targets).
 
 ## Hard rules

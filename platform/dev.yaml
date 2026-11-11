@@ -1,0 +1,14 @@
+# Registry: environment settings + the team projects the platform manages.
+# Owned by the platform team (CODEOWNERS). A project that is not listed here
+# cannot be targeted by any workload.
+apiVersion: platform.demo/v1
+kind: Environment
+environment: dev
+platformProject: platform-project-dev-514319
+region: europe-west10
+stateBucket: platform-project-dev-514319-tfstate
+projects:
+  shop-dev:                    # project key used by workloads (stable: it is a for_each key)
+    projectId: shop-dev-7d94   # created by the landing zone (docs/landing-zone-sim.md)
+    team: shop
+    network: { cidr: 10.10.0.0/24 }

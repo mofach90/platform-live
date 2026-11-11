@@ -4,9 +4,12 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 # Locally: the demo's own gcloud dir (accounts, configs, ADC), same as .envrc.
+# Terraform (Go) ignores CLOUDSDK_CONFIG and reads ~/.config/gcloud unless
+# GOOGLE_APPLICATION_CREDENTIALS points at the demo's ADC file.
 # In CI, google-github-actions/auth provides the credentials instead.
 ifndef CI
 export CLOUDSDK_CONFIG ?= $(HOME)/.config/gcloud-devfest
+export GOOGLE_APPLICATION_CREDENTIALS ?= $(CLOUDSDK_CONFIG)/application_default_credentials.json
 endif
 
 # Every directory that contains Terraform code.
