@@ -32,8 +32,7 @@ fmt-check: ## fail if a .tf file is not formatted
 	terraform fmt -recursive -check -diff
 
 validate: ## schemas + registry check + terraform validate
-	@if [ -f scripts/validate_workloads.py ]; then python3 scripts/validate_workloads.py; \
-	else echo "validate: scripts/validate_workloads.py not written yet (PLAN step 2/6), skipped"; fi
+	@python3 scripts/validate_workloads.py
 	@set -e; for d in $(TF_DIRS); do \
 	  echo "terraform validate $$d"; \
 	  terraform -chdir=$$d init -backend=false -input=false >/dev/null; \

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mofach90/platform-live/blob/main/schema/workload.schema.json",
+  "title": "Workload (workloads/<team>/<env>/workload.yaml)",
+  "description": "What a team asks the platform for: groups of identical VMs in its own project.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": { "const": "platform.demo/v1" },
+    "kind": { "const": "Workload" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["team", "env"],
+      "properties": {
+        "team": {
+          "description": "the team folder name: lowercase letters, digits and \"-\"",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,30}$"
+        },
+        "env": { "enum": ["dev"] }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["project", "vmGroups"],
+      "properties": {
+        "project": {
+          "description": "a project key from platform/dev.yaml",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{1,28}[a-z0-9]$"
+        },
+        "vmGroups": {
+          "description": "a list of 0 to 5 VM groups",
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "count", "size", "image"],
+            "properties": {
+              "name": {
+                "description": "lowercase letters, digits and \"-\", starting with a letter, at most 15 characters",
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,14}$"
+              },
+              "count": { "type": "integer", "minimum": 1, "maximum": 5 },
+              "size": { "enum": ["small", "medium", "large"] },
+              "image": { "enum": ["debian-12"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}
