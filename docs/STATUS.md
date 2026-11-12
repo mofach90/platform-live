@@ -1,6 +1,6 @@
 # STATUS
 
-**Last updated:** 2026-11-11, ~21:30, Claude Code — `make check` passes (fmt, validate, tflint, trivy, gitleaks)
+**Last updated:** 2026-11-12, morning, Claude Code — `make check` not re-run after step 5 (no Terraform code changed)
 **Talk:** Sat 14 Nov 2026, 10:00–10:45, DevFest Berlin, Room 3
 **Code freeze:** Thu 12 Nov, 12:00
 
@@ -19,19 +19,20 @@
   bound to `apply.yml@refs/heads/main` (ADR 0002 #7). `terraform plan` in `bootstrap/`: no changes — commit bd692bd.
 - Local credentials fixed: Terraform ignores `CLOUDSDK_CONFIG`; `.envrc` + Makefile now also set
   `GOOGLE_APPLICATION_CREDENTIALS` (ADR 0002 #1, journal).
+- Steps 2 + 3: baseline applied for shop-dev; vm-group module + workload layer — commits 9b9755f, 0ee93d7.
+- Step 4 complete: `pr.yml` ran green on test PR #1 (closed, not merged): one plan comment — commit 9009459.
 
 ## In progress
-- Steps 2 + 3 done and committed (9b9755f, 0ee93d7): baseline applied for shop-dev; workload layer plans 5 to add.
-- Step 4 written, **not committed, never run**: `.github/workflows/pr.yml` (validate → matrix → plan per
-  project as ci-plan → one updated PR comment), `scripts/changed_projects.py` (matrix, needs `yq`),
-  onboarding note in `bootstrap/README.md` (human runs the first plan of a new state).
-  Actions pinned by SHA. Only a real pull request can prove the workflow works.
+- Step 5 written, **not committed, never run**: `.github/workflows/apply.yml` (push to main or manual run →
+  registry keys → baseline matrix → workload matrix, as ci-apply → `deployer@`, concurrency per project+layer)
+  and a `make apply` target (auto-approve only when `CI` is set).
+- Local branch is still `test/plan-pipeline` (count: 3, PR closed); the step 5 files are uncommitted on top of it.
 
 ## Next
-1. Human: commit + push step 4, open a test PR that touches `workloads/shop/dev/workload.yaml`;
-   done when the PR shows one readable plan comment (5 to add). Fix what the first run shows.
-2. Step 5: `apply.yml` (must keep this file name — WIF binding) → first VMs via CI; test IAP SSH.
-3. Step 6: `scripts/validate_workloads.py` (schema + registry + path, all errors at once, plain text).
+1. Human: `git switch main`, new branch, commit step 5, PR → check the plan comment (20-workload: 5 to add) →
+   merge → `apply` workflow creates `shop-web-01/02`; test IAP SSH. Fix what the first run shows.
+2. Step 6: `scripts/validate_workloads.py` (schema + registry + path, all errors at once, plain text).
+3. Step 13: reset script + backup video (must-have before the freeze).
 
 ## Blocked / open questions
 - **Human:** protect `main` on GitHub (PR + review, "Require review from Code Owners") — the

@@ -17,10 +17,10 @@ TF_DIRS := $(sort $(dir $(shell find bootstrap layers modules -name '*.tf' -not 
 
 LAYER ?=
 PROJECT ?=
-# planner (read-only) for plans; the first local apply passes identity=deployer by hand.
+# planner (read-only) for plans; `make apply` always uses deployer.
 IDENTITY ?= planner
 
-.PHONY: help fmt fmt-check validate lint scan plan check
+.PHONY: help fmt fmt-check validate lint scan plan apply check
 
 help: ## list targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  %-10s %s\n", $$1, $$2}'
@@ -54,5 +54,12 @@ plan: ## init + plan -lock=false for one project: make plan LAYER=20-workload PR
 	@set -e; layer="$(LAYER)"; \
 	terraform -chdir=layers/$(LAYER) init -reconfigure -input=false -backend-config="prefix=$${layer#*-}/$(PROJECT)" >/dev/null; \
 	terraform -chdir=layers/$(LAYER) plan -lock=false -input=false -var project_key=$(PROJECT) -var identity=$(IDENTITY)
+
+apply: ## init + apply as deployer; CI runs this on main, a human only for a first apply (asks for "yes")
+	@test -n "$(LAYER)" && test -n "$(PROJECT)" || { echo "usage: make apply LAYER=<10-baseline|20-workload> PROJECT=<key in platform/dev.yaml>"; exit 2; }
+	@test -d layers/$(LAYER) || { echo "apply: layers/$(LAYER) does not exist (have: $$(ls layers | tr '\n' ' '))"; exit 2; }
+	@set -e; layer="$(LAYER)"; \
+	terraform -chdir=layers/$(LAYER) init -reconfigure -input=false -backend-config="prefix=$${layer#*-}/$(PROJECT)" >/dev/null; \
+	terraform -chdir=layers/$(LAYER) apply $(if $(CI),-input=false -auto-approve) -var project_key=$(PROJECT) -var identity=deployer
 
 check: fmt-check validate lint scan ## run before finishing (same as CI)

@@ -1,0 +1,125 @@
+# Apply pipeline: main is the desired state. Every registered project is applied,
+# baseline first, then workload. Terraform is idempotent: unchanged projects report "No changes".
+# Identity: ci-apply (write). Google only accepts this exact file on main
+# (WIF binding on workflow_ref, ADR 0002 #7) — do NOT rename or move this file.
+name: apply
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - platform/**
+      - layers/**
+      - modules/**
+      - workloads/**
+      - Makefile
+      - .tool-versions
+      - .github/workflows/apply.yml
+  workflow_dispatch: # manual re-run from main (demo reset); from any other branch WIF refuses the login
+
+# Least privilege: each job asks for what it needs on top of this.
+permissions:
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_VERSION: "1.17.1"   # keep in sync with .tool-versions
+  WIF_PROVIDER: projects/54569984113/locations/global/workloadIdentityPools/github/providers/github-oidc
+  CI_APPLY_SA: ci-apply@platform-project-dev-514319.iam.gserviceaccount.com
+
+jobs:
+  projects:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    outputs:
+      keys: ${{ steps.keys.outputs.keys }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: keys
+        run: echo "keys=$(yq -o=json -I=0 '.projects | keys' platform/dev.yaml)" >> "$GITHUB_OUTPUT"
+
+  baseline:
+    needs: [projects]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write      # request the GitHub OIDC token for Workload Identity Federation
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJSON(needs.projects.outputs.keys) }}
+    # One apply at a time per project and layer; a running apply is never cancelled.
+    concurrency:
+      group: apply-${{ matrix.project }}-10-baseline
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.CI_APPLY_SA }}
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+      - name: Apply
+        env:
+          TF_CLI_ARGS_apply: -no-color
+          PROJECT: ${{ matrix.project }}
+        run: |
+          set -o pipefail
+          make apply LAYER=10-baseline PROJECT="$PROJECT" 2>&1 | tee apply.txt
+      - name: Summary
+        if: always()
+        env:
+          PROJECT: ${{ matrix.project }}
+        run: |
+          {
+            echo "### $PROJECT · 10-baseline"
+            echo '```'
+            grep -v 'Refreshing state\|Reading\.\.\.\|Read complete' apply.txt | tail -c 6000
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  workload:
+    # The workload layer needs the network from the baseline of the same run.
+    needs: [projects, baseline]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJSON(needs.projects.outputs.keys) }}
+    concurrency:
+      group: apply-${{ matrix.project }}-20-workload
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.CI_APPLY_SA }}
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+      - name: Apply
+        env:
+          TF_CLI_ARGS_apply: -no-color
+          PROJECT: ${{ matrix.project }}
+        run: |
+          set -o pipefail
+          make apply LAYER=20-workload PROJECT="$PROJECT" 2>&1 | tee apply.txt
+      - name: Summary
+        if: always()
+        env:
+          PROJECT: ${{ matrix.project }}
+        run: |
+          {
+            echo "### $PROJECT · 20-workload"
+            echo '```'
+            grep -v 'Refreshing state\|Reading\.\.\.\|Read complete' apply.txt | tail -c 6000
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
