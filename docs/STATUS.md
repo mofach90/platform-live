@@ -1,6 +1,6 @@
 # STATUS
 
-**Last updated:** 2026-11-12, morning, Claude Code — `make check` not re-run after step 5 (no Terraform code changed)
+**Last updated:** 2026-11-12, afternoon, Claude Code — `make check` passes
 **Talk:** Sat 14 Nov 2026, 10:00–10:45, DevFest Berlin, Room 3
 **Code freeze:** Thu 12 Nov, 12:00
 
@@ -22,24 +22,25 @@
 - Steps 2 + 3: baseline applied for shop-dev; vm-group module + workload layer — commits 9b9755f, 0ee93d7.
 - Step 4 complete: `pr.yml` ran green on test PR #1 (closed, not merged): one plan comment — commit 9009459.
 
+- Step 5 complete: `apply.yml` + `make apply`; merge of PR #2 created `shop-web-01/02` via CI as ci-apply →
+  `deployer@`; IAP SSH works — commits 2003dfa, daf0a28.
+- `main` is protected by a ruleset: PR required (0 approvals — solo demo), no force push, no deletion,
+  required check `validate`.
+
 ## In progress
-- Step 5 written, **not committed, never run**: `.github/workflows/apply.yml` (push to main or manual run →
-  registry keys → baseline matrix → workload matrix, as ci-apply → `deployer@`, concurrency per project+layer)
-  and a `make apply` target (auto-approve only when `CI` is set).
-- Local branch is still `test/plan-pipeline` (count: 3, PR closed); the step 5 files are uncommitted on top of it.
+- Step 6 written, **not committed, not yet seen on a PR**: `scripts/validate_workloads.py` (schema + path +
+  registry rules, all errors at once, GitHub annotations on the line), `schema/workload.schema.json`,
+  `workloads/README.md` (team-facing contract, target of the docs links). Tested locally with broken files.
 
 ## Next
-1. Human: `git switch main`, new branch, commit step 5, PR → check the plan comment (20-workload: 5 to add) →
-   merge → `apply` workflow creates `shop-web-01/02`; test IAP SSH. Fix what the first run shows.
-2. Step 6: `scripts/validate_workloads.py` (schema + registry + path, all errors at once, plain text).
-3. Step 13: reset script + backup video (must-have before the freeze).
+1. Human: branch, commit step 6, PR, merge. Then a second PR with a broken `workload.yaml`
+   (e.g. `size: huge`, `count: 9`): done when `validate` is red with clear messages and merge is blocked.
+2. Step 13: reset script (VMs only) + backup video — must-have.
+3. If time is left: step 11 (tflint, trivy, gitleaks in `pr.yml`), then step 7.
 
 ## Blocked / open questions
-- **Human:** protect `main` on GitHub (PR + review, "Require review from Code Owners") — the
-  `refs/heads/main` condition on ci-apply is worthless without it.
 - Decided: the first plan of a new state is run by a human at onboarding (`bootstrap/README.md`), because
   the GCS backend writes an empty state then and `ci-plan` stays read-only on the bucket.
-- `scripts/validate_workloads.py` (schema + registry check) is not written yet; `make validate` skips it.
 - **After the talk:** the local gcloud login uses a super-admin account; switch to a normal admin user.
 - **Optional cleanup:** `default` VPC with open SSH/RDP firewall rules exists in the platform project.
 - **Scope:** freeze is Thu 12:00. Must-have: steps 2–6 + 13. Slides-only if late: 7, 8–10, 12.
