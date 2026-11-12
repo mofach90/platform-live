@@ -15,7 +15,8 @@
 #
 # It only changes the workload file, so only VMs (and their service accounts) are created or
 # deleted — never projects, networks or bootstrap. It needs no cloud credentials: the write
-# identity stays in CI. It works in a temporary git worktree; your checkout is not touched.
+# identity stays in CI. It works in a temporary git worktree on a detached HEAD and pushes
+# straight to the remote branches: your checkout and your local branches are not touched.
 set -euo pipefail
 
 MODE="${1:-start}"
@@ -59,16 +60,16 @@ if git -C "$ROOT" show "origin/main:$WORKLOAD" | cmp -s - "$ROOT/demo/$MODE.yaml
 else
   branch="demo/reset-$(date +%Y%m%d-%H%M%S)"
   step "Reset PR: main → demo/$MODE.yaml (branch $branch)"
-  git -C "$WORK" checkout --quiet -b "$branch"
   cp "$ROOT/demo/$MODE.yaml" "$WORK/$WORKLOAD"
   git -C "$WORK" commit --quiet -am "chore(demo): reset shop workload to $MODE state"
-  git -C "$WORK" push --quiet -u origin "$branch"
+  git -C "$WORK" push --quiet origin "HEAD:refs/heads/$branch"
   pr="$(gh pr create --head "$branch" --base main \
         --title "chore(demo): reset shop workload to $MODE state" \
         --body "Created by \`scripts/demo_reset.sh $MODE\`.")"
   echo "$pr"
   watch_run pr.yml "$(git -C "$WORK" rev-parse HEAD)"
-  gh pr merge "$pr" --squash --delete-branch >/dev/null
+  gh pr merge "$pr" --squash >/dev/null
+  git -C "$ROOT" push --quiet origin --delete "$branch"
   step "Merged — waiting for the apply workflow"
   watch_run apply.yml "$(gh pr view "$pr" --json mergeCommit --jq .mergeCommit.oid)"
   git -C "$ROOT" fetch --quiet --prune origin
@@ -76,14 +77,14 @@ fi
 
 # --- 2. demo branches, rebuilt from the new main ------------------------------------------------
 demo_branch() { # <branch> <demo file> <commit message>
-  git -C "$WORK" checkout --quiet -B "$1" origin/main
+  git -C "$WORK" checkout --quiet --detach origin/main
   cp "$ROOT/demo/$2" "$WORK/$WORKLOAD"
   if [ "$1" = demo/invalid ]; then # the "file in the wrong folder" mistake
     cp "$ROOT/demo/start.yaml" "$WORK/workloads/shop/workload.yaml"
     git -C "$WORK" add workloads/shop/workload.yaml
   fi
   git -C "$WORK" commit --quiet -am "$3"
-  git -C "$WORK" push --quiet --force origin "$1"
+  git -C "$WORK" push --quiet --force origin "HEAD:refs/heads/$1"
   echo "pushed $1"
 }
 
