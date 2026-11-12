@@ -20,7 +20,7 @@ PROJECT ?=
 # planner (read-only) for plans; `make apply` always uses deployer.
 IDENTITY ?= planner
 
-.PHONY: help fmt fmt-check validate lint scan plan apply check
+.PHONY: help fmt fmt-check validate lint scan plan apply demo-reset check
 
 help: ## list targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  %-10s %s\n", $$1, $$2}'
@@ -60,5 +60,8 @@ apply: ## init + apply as deployer; CI runs this on main, a human only for a fir
 	@set -e; layer="$(LAYER)"; \
 	terraform -chdir=layers/$(LAYER) init -reconfigure -input=false -backend-config="prefix=$${layer#*-}/$(PROJECT)" >/dev/null; \
 	terraform -chdir=layers/$(LAYER) apply $(if $(CI),-input=false -auto-approve) -var project_key=$(PROJECT) -var identity=deployer
+
+demo-reset: ## demo back to its start state through the pipeline (MODE=empty removes all VMs)
+	@scripts/demo_reset.sh $(or $(MODE),start)
 
 check: fmt-check validate lint scan ## run before finishing (same as CI)

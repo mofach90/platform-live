@@ -1,0 +1,6 @@
+apiVersion: platform.demo/v1
+kind: Workload
+metadata: { team: shop, env: dev }
+spec:
+  project: shop-dev
+  vmGroups: []            # no VMs: used to stop paying between rehearsals
