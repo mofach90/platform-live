@@ -6,5 +6,5 @@ spec:
   vmGroups:
     - name: web           # renaming a group = destroy + create
       count: 2            # 1..5
-      size: small         # small | medium | large
+      size: huge         # small | medium | large
       image: debian-12    # allow-list
