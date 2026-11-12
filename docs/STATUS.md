@@ -1,6 +1,6 @@
 # STATUS
 
-**Last updated:** 2026-11-12, afternoon, Claude Code — `make check` passes
+**Last updated:** 2026-11-12, evening, Claude Code — `make scan` + validator pass; full `make check` last passed before step 13 (no Terraform change since)
 **Talk:** Sat 14 Nov 2026, 10:00–10:45, DevFest Berlin, Room 3
 **Code freeze:** Thu 12 Nov, 12:00
 
@@ -27,15 +27,19 @@
 - `main` is protected by a ruleset: PR required (0 approvals — solo demo), no force push, no deletion,
   required check `validate`.
 
+- Step 6 complete: validator + workload schema + `workloads/README.md`; invalid PR #4 shows red `validate`
+  with clear messages and merge is blocked — commits d97384a, 5ecd2ba.
+
 ## In progress
-- Step 6 written, **not committed, not yet seen on a PR**: `scripts/validate_workloads.py` (schema + path +
-  registry rules, all errors at once, GitHub annotations on the line), `schema/workload.schema.json`,
-  `workloads/README.md` (team-facing contract, target of the docs links). Tested locally with broken files.
+- Step 13 written, **not committed, never run**: `scripts/demo_reset.sh` (`make demo-reset`, `MODE=empty`
+  removes all VMs) and the demo states in `demo/*.yaml`. Reset goes through a PR + merge + apply, then
+  rebuilds `demo/add-worker` (branch only), `demo/invalid` and `demo/rename` (draft PRs).
+- Backup video not recorded.
 
 ## Next
-1. Human: branch, commit step 6, PR, merge. Then a second PR with a broken `workload.yaml`
-   (e.g. `size: huge`, `count: 9`): done when `validate` is red with clear messages and merge is blocked.
-2. Step 13: reset script (VMs only) + backup video — must-have.
+1. Human: commit step 13 via PR, close PR #4 (replaced by `demo/invalid`), run `make demo-reset`,
+   then one full rehearsal: merge `demo/add-worker` → `make demo-reset` → time it (done when < 10 min).
+2. Human: record the backup video of the full demo script (PLAN §7).
 3. If time is left: step 11 (tflint, trivy, gitleaks in `pr.yml`), then step 7.
 
 ## Blocked / open questions
