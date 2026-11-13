@@ -1,6 +1,6 @@
 # STATUS
 
-**Last updated:** 2026-11-13, ~09:15, Claude Code — platform-live: fmt, validate, tflint, trivy, gitleaks pass; layer folders: fmt, validate, tflint, trivy pass (gitleaks needs `git init` first)
+**Last updated:** 2026-11-13, ~09:50, Claude Code — platform-live checks green on PR #19; `renovate.json` passes renovate-config-validator
 **Talk:** Sat 14 Nov 2026, 10:00–10:45, DevFest Berlin, Room 3
 **Code freeze:** Thu 12 Nov, 12:00
 
@@ -40,24 +40,23 @@
 - Step 8 complete: `vm-group` lives in platform-modules, pinned by tag — PR #18.
 - Step 9 complete: semantic-release in platform-modules; `feat:` commit produced `v1.1.0` + GitHub Release.
 
+- Layers split complete (ADR 0003): repos `platform-layer-baseline` / `platform-layer-workload` released `v1.0.0`
+  by semantic-release; platform-live pins them in `platform/dev.yaml`; PR #19 planned "No changes" for both
+  layers, apply after merge green; demo branches rebuilt. `vm-group` lives inside the workload layer repo.
+
 ## In progress
-- **Layers split into their own repos (ADR 0003), written, not committed, repos not created yet.**
-  - New workspace folders `../platform-layer-baseline`, `../platform-layer-workload`: layer code at the repo
-    root (inputs via `registry_file` / `workloads_dir`, empty `backend "gcs" {}`), Makefile, CI, semantic-release.
-    The `vm-group` module is a local folder inside the workload layer repo (ADR 0003 #8);
-    platform-modules is retired, not deleted.
-  - platform-live: `layers/` deleted; `platform/dev.yaml` has `layers.<name>.source/version` (both `v1.0.0`);
-    `scripts/tf_layer.sh` fetches the tag and runs Terraform; Makefile, matrix script, `apply.yml`, schema adapted.
-    Layer names are now `baseline` / `workload` (state keys unchanged).
-  - Verified locally with `LAYER_DIR=../platform-layer-<name> make plan …`: **No changes** for both layers.
-    Not verified: fetching the real tags (they do not exist yet), both workflows on GitHub.
+- Step 10 written, **not committed, Renovate app not installed**: `renovate.json` (only job: bump
+  `layers.<name>.version` in `platform/*.yaml`; never automerge; dependency dashboard on).
+- Ready as the first layer release to roll out, uncommitted in `../platform-layer-workload`: label `size` on
+  the VMs (`feat:` → `v1.1.0`). Local plan with that code: 2 to change in place, nothing replaced.
 - Backup video not recorded.
 
 ## Next
-1. Human: create the two public repos, push, tag `v1.0.0` each; check their CI.
-2. Human: in platform-live `make plan LAYER=baseline|workload PROJECT=shop-dev` (pinned tags, must say
-   "No changes"), then PR + merge, `make demo-reset`, full rehearsal.
-3. Step 10: Renovate with a custom rule for `platform/dev.yaml` → PR "update platform-layer-… to v1.x".
+1. Human: commit `renovate.json` via PR; install the Renovate GitHub App on `mofach90/platform-live` only.
+2. Human: push the `feat:` in platform-layer-workload → `v1.1.0`; trigger Renovate from the Dependency
+   Dashboard issue; done when a PR bumps `layers.workload.version` and its plan comment shows 2 to change.
+3. Human: decide whether that PR is merged before the talk or kept open for the demo; then
+   `make demo-reset`, full rehearsal, backup video.
 
 ## Blocked / open questions
 - Decided: the first plan of a new state is run by a human at onboarding (`bootstrap/README.md`), because
