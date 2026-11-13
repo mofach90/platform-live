@@ -1,0 +1,29 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Only one job: propose new layer versions for platform/<env>.yaml as pull requests (ADR 0003).",
+  "extends": [":dependencyDashboard", ":semanticCommits"],
+  "enabledManagers": ["custom.regex"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "layers.<name>.source + version in the environment registries",
+      "managerFilePatterns": ["/^platform/.+\\.yaml$/"],
+      "matchStrings": [
+        "source:\\s*(?<depName>[\\w.-]+/[\\w.-]+)\\s+version:\\s*(?<currentValue>v\\d+\\.\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "github-tags"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "A layer bump changes infrastructure: never merge it automatically.",
+      "matchManagers": ["custom.regex"],
+      "automerge": false,
+      "semanticCommitType": "feat",
+      "semanticCommitScope": "layers",
+      "commitMessageTopic": "{{depName}}"
+    }
+  ],
+  "prHourlyLimit": 0,
+  "labels": ["layer-update"]
+}
