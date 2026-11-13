@@ -29,7 +29,7 @@ spec:
 
 What you get without asking: no external IP, outbound internet through NAT,
 SSH only through IAP with OS Login, Shielded VM, one service account per group,
-labels for team, env and group.
+a daily disk snapshot kept for 7 days, labels for team, env and group.
 
 Check locally before you push: `make validate`.
 The machine-readable version of this table is `schema/workload.schema.json`.

@@ -15,6 +15,11 @@ variable "subnetwork" {
   type        = string
 }
 
+variable "snapshot_policy" {
+  description = "Name of the snapshot schedule (resource policy) from the baseline layer, in the same project and region"
+  type        = string
+}
+
 variable "team" {
   description = "Owning team (label)"
   type        = string

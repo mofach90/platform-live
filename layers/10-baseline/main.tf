@@ -77,3 +77,36 @@ resource "google_compute_project_metadata_item" "oslogin" {
 
   depends_on = [google_project_service.apis]
 }
+
+# --- Backup: one daily snapshot schedule per project ----------------------------
+# The vm-group module attaches every boot disk to it by this name, so teams get
+# backups without asking.
+
+resource "google_compute_resource_policy" "daily_snapshots" {
+  name        = "platform-daily"
+  description = "Daily disk snapshot, kept 7 days"
+
+  snapshot_schedule_policy {
+    schedule {
+      daily_schedule {
+        days_in_cycle = 1
+        start_time    = "03:00" # UTC
+      }
+    }
+
+    # Snapshots also expire after the VM is deleted: no forgotten backups to pay for.
+    retention_policy {
+      max_retention_days    = 7
+      on_source_disk_delete = "APPLY_RETENTION_POLICY"
+    }
+
+    snapshot_properties {
+      storage_locations = [local.registry.region]
+      labels = {
+        managed-by = "platform"
+      }
+    }
+  }
+
+  depends_on = [google_project_service.apis]
+}

@@ -1,6 +1,6 @@
 # A group of identical private VMs with the platform defaults built in.
 # Teams cannot override: no external IP, IAP-only access, OS Login, Shielded VM,
-# own service account, labels, names.
+# own service account, labels, names, daily snapshots.
 
 locals {
   machine_types = {
@@ -91,4 +91,15 @@ resource "google_compute_instance" "vm" {
   }
 
   allow_stopping_for_update = true
+}
+
+# Backup by default: the boot disk (same name as the VM) follows the project's
+# daily snapshot schedule. A separate resource, so adding it does not recreate VMs.
+resource "google_compute_disk_resource_policy_attachment" "boot" {
+  for_each = local.instances
+
+  project = var.project_id
+  name    = var.snapshot_policy
+  disk    = google_compute_instance.vm[each.key].name
+  zone    = each.value.zone
 }
