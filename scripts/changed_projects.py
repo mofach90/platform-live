@@ -5,7 +5,7 @@ Usage: changed_projects.py <base-git-ref>
 
 Rules:
 - only workloads/<team>/<env>/ changed  → 20-workload for that team's projects
-- platform/, layers/, modules/, Makefile, scripts/ or workflows changed → every project, both layers
+- platform/, layers/, Makefile, scripts/ or workflows changed → every project, both layers
 - anything else (docs, …) → empty matrix, no plan needed
 
 Reads platform/dev.yaml through `yq` (preinstalled on GitHub runners), so no pip packages are needed.
@@ -16,7 +16,7 @@ import sys
 
 REGISTRY = "platform/dev.yaml"
 LAYERS = ["10-baseline", "20-workload"]
-EVERYTHING = ("platform/", "layers/", "modules/", "scripts/", "Makefile", ".github/workflows/", ".tool-versions")
+EVERYTHING = ("platform/", "layers/", "scripts/", "Makefile", ".github/workflows/", ".tool-versions")
 
 
 def run(*cmd):

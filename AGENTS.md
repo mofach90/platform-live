@@ -23,7 +23,7 @@ platform/dev.yaml          registry: environment settings + registered team proj
 layers/10-baseline/        per project: APIs, VPC/subnet/NAT/IAP firewall, OS Login,
                            snapshot policy          (runs once per project, matrix)
 layers/20-workload/        per project: VM groups from workload.yaml (runs once per project)
-modules/vm-group/          until PLAN step 8; then moves to platform-modules
+(modules)                  live in the platform-modules repo, pinned here by tag (`?ref=vX.Y.Z`)
 workloads/<team>/<env>/workload.yaml   the only files app teams touch (CODEOWNERS)
 schema/                    workload.schema.json, environment.schema.json
 scripts/                   validate_workloads.py (friendly errors), changed_projects.py (matrix)

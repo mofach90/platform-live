@@ -22,7 +22,7 @@ This folder is a WORKSPACE, not a git repository. It contains two independent re
    PR → merge with a Conventional Commit → semantic-release tags it → bump
    `?ref=vX.Y.Z` in platform-live (or merge the Renovate PR).
    Never point platform-live at a branch or an untagged commit.
-5. Until PLAN step 8, modules live in `platform-live/modules/`; leave platform-modules alone.
+5. Modules live only in platform-modules (since PLAN step 8); platform-live has no `modules/` folder.
 6. Skills: `.agents/skills` and `.claude/skills` here are links to
    `platform-live/.agents/skills`. Edit skills there.
 7. Workspace files (this AGENTS.md, CLAUDE.md, the links) are not versioned.
