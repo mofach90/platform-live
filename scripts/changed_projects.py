@@ -4,8 +4,8 @@
 Usage: changed_projects.py <base-git-ref>
 
 Rules:
-- only workloads/<team>/<env>/ changed  → 20-workload for that team's projects
-- platform/, layers/, Makefile, scripts/ or workflows changed → every project, both layers
+- only workloads/<team>/<env>/ changed  → workload layer for that team's projects
+- platform/ (registry, layer versions), Makefile, scripts/ or workflows changed → every project, both layers
 - anything else (docs, …) → empty matrix, no plan needed
 
 Reads platform/dev.yaml through `yq` (preinstalled on GitHub runners), so no pip packages are needed.
@@ -15,8 +15,8 @@ import subprocess
 import sys
 
 REGISTRY = "platform/dev.yaml"
-LAYERS = ["10-baseline", "20-workload"]
-EVERYTHING = ("platform/", "layers/", "scripts/", "Makefile", ".github/workflows/", ".tool-versions")
+LAYERS = ["baseline", "workload"]
+EVERYTHING = ("platform/", "scripts/", "Makefile", ".github/workflows/", ".tool-versions")
 
 
 def run(*cmd):
@@ -37,7 +37,7 @@ def main():
         # workloads/<team>/<env>/workload.yaml → projects of that team in this environment
         teams = {p.split("/")[1] for p in changed if p.startswith("workloads/") and p.split("/")[2:3] == [env]}
         matrix = [
-            {"project": key, "layer": "20-workload"}
+            {"project": key, "layer": "workload"}
             for key in sorted(projects)
             if projects[key]["team"] in teams
         ]

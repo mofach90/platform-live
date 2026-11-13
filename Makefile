@@ -12,12 +12,13 @@ export CLOUDSDK_CONFIG ?= $(HOME)/.config/gcloud-devfest
 export GOOGLE_APPLICATION_CREDENTIALS ?= $(CLOUDSDK_CONFIG)/application_default_credentials.json
 endif
 
-# Every directory that contains Terraform code.
-TF_DIRS := $(sort $(dir $(shell find bootstrap layers -name '*.tf' -not -path '*/.terraform/*' 2>/dev/null)))
+# Terraform code in this repo: only bootstrap. Layers live in their own repos (platform/dev.yaml).
+TF_DIRS := bootstrap/
 
 LAYER ?=
 PROJECT ?=
-# planner (read-only) for plans; `make apply` always uses deployer.
+# Layers: baseline, workload (see platform/dev.yaml → layers). planner (read-only) for plans;
+# `make apply` always uses deployer.
 IDENTITY ?= planner
 
 .PHONY: help fmt fmt-check validate lint scan plan apply demo-reset check
@@ -44,22 +45,14 @@ lint: ## tflint (rules in .tflint.hcl)
 	tflint --recursive --config "$(CURDIR)/.tflint.hcl"
 
 scan: ## trivy config + gitleaks
-	trivy config --exit-code 1 --severity HIGH,CRITICAL --skip-dirs '**/.terraform' --quiet .
+	trivy config --exit-code 1 --severity HIGH,CRITICAL --skip-dirs '**/.terraform' --skip-dirs .layers --quiet .
 	gitleaks git --no-banner --redact .
 
-plan: ## init + plan -lock=false for one project: make plan LAYER=20-workload PROJECT=shop-dev
-	@test -n "$(LAYER)" && test -n "$(PROJECT)" || { echo "usage: make plan LAYER=<10-baseline|20-workload> PROJECT=<key in platform/dev.yaml>"; exit 2; }
-	@test -d layers/$(LAYER) || { echo "plan: layers/$(LAYER) does not exist (have: $$(ls layers | tr '\n' ' '))"; exit 2; }
-	@set -e; layer="$(LAYER)"; \
-	terraform -chdir=layers/$(LAYER) init -reconfigure -input=false -backend-config="prefix=$${layer#*-}/$(PROJECT)" >/dev/null; \
-	terraform -chdir=layers/$(LAYER) plan -lock=false -input=false -var project_key=$(PROJECT) -var identity=$(IDENTITY)
+plan: ## read-only plan of one layer for one project: make plan LAYER=workload PROJECT=shop-dev
+	@scripts/tf_layer.sh plan "$(LAYER)" "$(PROJECT)" $(IDENTITY)
 
-apply: ## init + apply as deployer; CI runs this on main, a human only for a first apply (asks for "yes")
-	@test -n "$(LAYER)" && test -n "$(PROJECT)" || { echo "usage: make apply LAYER=<10-baseline|20-workload> PROJECT=<key in platform/dev.yaml>"; exit 2; }
-	@test -d layers/$(LAYER) || { echo "apply: layers/$(LAYER) does not exist (have: $$(ls layers | tr '\n' ' '))"; exit 2; }
-	@set -e; layer="$(LAYER)"; \
-	terraform -chdir=layers/$(LAYER) init -reconfigure -input=false -backend-config="prefix=$${layer#*-}/$(PROJECT)" >/dev/null; \
-	terraform -chdir=layers/$(LAYER) apply $(if $(CI),-input=false -auto-approve) -var project_key=$(PROJECT) -var identity=deployer
+apply: ## apply as deployer; CI runs this on main, a human only for a first apply (asks for "yes")
+	@scripts/tf_layer.sh apply "$(LAYER)" "$(PROJECT)"
 
 demo-reset: ## demo back to its start state through the pipeline (MODE=empty removes all VMs)
 	@scripts/demo_reset.sh $(or $(MODE),start)

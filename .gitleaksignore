@@ -1,3 +1,5 @@
 # False positives, one fingerprint per line (from `gitleaks git -v`). Review before adding.
 # AGENTS.md line 23: the words "VPC/subnet/NAT/IAP" next to "APIs" match generic-api-key.
 9e994638ba18f725853b4953517b95f4627cc828:AGENTS.md:generic-api-key:23
+# Same false positive after the line was reworded in a later commit (ADR 0003); the line no longer matches.
+a1e1a4622dbe9ae0e3920996194943a8ecbddf05:AGENTS.md:generic-api-key:24

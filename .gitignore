@@ -25,3 +25,6 @@ __pycache__/
 
 # custom 
 docs/journal.md
+
+# Layer code fetched at the pinned version (scripts/tf_layer.sh)
+.layers/

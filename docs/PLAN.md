@@ -17,8 +17,8 @@ developers control, which defaults the platform enforces, useful feedback.
 | Landing zone | org/folders, create project, billing, base APIs, `deployer` (write) + `planner` (read) SAs | **manual**, `docs/landing-zone-sim.md`; on stage: "a real LZ does this" |
 | Platform team — central | WIF, CI identities, state bucket, impersonation grants | `bootstrap/`, manual apply (chicken-and-egg) |
 | Platform team — onboarding | register project in `platform/dev.yaml` (PR) + re-run bootstrap for the grants | PR + one manual apply |
-| Platform team — baseline | configure each registered project: APIs, network, OS Login, snapshot policy | `layers/10-baseline`, CI |
-| App team | `workloads/<team>/<env>/workload.yaml` → PR | `layers/20-workload`, CI |
+| Platform team — baseline | configure each registered project: APIs, network, OS Login, snapshot policy | repo `platform-layer-baseline`, version pinned in `platform/dev.yaml` (ADR 0003), CI |
+| App team | `workloads/<team>/<env>/workload.yaml` → PR | repo `platform-layer-workload`, version pinned in `platform/dev.yaml`, CI |
 
 ## 3. Architecture
 
@@ -28,7 +28,7 @@ GitHub: platform-live
  ├─ workloads/shop/dev/workload.yaml ┤ (app team, CODEOWNERS)
  │                                   ▼
  │  pr.yml   validate (schema + registry + path) → fmt/lint/trivy
- │           → changed projects → matrix: plan 10-baseline / 20-workload per project
+ │           → changed projects → matrix: plan baseline / workload per project
  │           → one PR comment (updated, not duplicated)
  │  apply.yml (main): matrix baseline → matrix workload, concurrency per project+layer
  │
