@@ -43,6 +43,7 @@ watch_run() { # <workflow file> <commit sha>
     sleep 4
   done
   [ -n "$id" ] || { echo "demo-reset: no $1 run appeared for commit $2" >&2; exit 1; }
+  echo "waiting for $1 (usually 1-2 min, longer if GitHub queues the job): $(gh run view "$id" --json url --jq .url)"
   gh run watch "$id" --exit-status --interval 5 >/dev/null || {
     echo "demo-reset: $1 failed: gh run view $id --log-failed" >&2; exit 1; }
   echo "$1 succeeded (run $id)"
