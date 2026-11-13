@@ -7,3 +7,4 @@
 # App teams own only their own workload folder. In a GitHub org this would be
 # a team handle like @<org>/team-shop; a personal repo can only name users.
 /workloads/shop/    @mofach90
+/workloads/blog/    @mofach90
