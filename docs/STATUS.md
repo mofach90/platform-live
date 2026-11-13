@@ -1,6 +1,6 @@
 # STATUS
 
-**Last updated:** 2026-11-13, Claude Code — workflow YAML parses; `make check` not re-run (no Terraform change)
+**Last updated:** 2026-11-13, morning, Claude Code — fmt, validate, tflint, trivy, gitleaks pass
 **Talk:** Sat 14 Nov 2026, 10:00–10:45, DevFest Berlin, Room 3
 **Code freeze:** Thu 12 Nov, 12:00
 
@@ -33,16 +33,21 @@
 - Step 13 script complete: `make demo-reset` and `MODE=empty` both ran end to end (about 3 min each);
   demo branches + draft PRs #6 (invalid) and #7 (rename) exist — PRs #5, #9, #12.
 
+- Step 11 complete: job `scan` in `pr.yml` (tflint, trivy, gitleaks, pinned by version + sha256), green — PR #16.
+
 ## In progress
-- Step 11 written, **not committed, never run**: job `scan` in `pr.yml` (tflint, trivy, gitleaks installed by
-  pinned version + sha256, then `make lint` and `make scan`). Not a required check, does not gate the plan.
+- Step 7 written, **not committed, not applied**: snapshot schedule `platform-daily` (daily 03:00 UTC, 7 days,
+  expires after disk deletion) in `layers/10-baseline`; `vm-group` attaches each boot disk to it by name
+  (separate attachment resource, VMs are not recreated). Local plans as planner: baseline 1 to add,
+  workload 2 to add, nothing replaced.
 - Backup video not recorded (step 13's second half).
 
 ## Next
-1. Human: one PR with the `scan` job; done when `scan` is green on that PR.
-2. Human: Saturday routine — `make demo-reset` about 9:00, check VMs + draft PRs; record the backup video
-   before that (PLAN §7). After the talk: `make demo-reset MODE=empty`.
-3. Only if time is left: step 7 (snapshot policy). Steps 8–10, 12 are slides only.
+1. Human: PR with step 7 → merge → apply; done when the disks show the schedule and a second
+   plan of both layers says "No changes" (checks that the attachment causes no drift on the VM).
+2. Human: `make demo-reset` afterwards (rebuilds the demo branches on the new main), full rehearsal,
+   backup video. Plan counts changed: add-worker is now 9 to add (3 VMs, 3 attachments, 1 SA, 2 bindings).
+3. Step 8 (modules to `platform-modules`, pin by tag) only if the user wants it before the talk.
 
 ## Blocked / open questions
 - Decided: the first plan of a new state is run by a human at onboarding (`bootstrap/README.md`), because

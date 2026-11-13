@@ -26,8 +26,11 @@ module "vm_group" {
   project_id = local.project.projectId
   region     = local.registry.region
   subnetwork = data.google_compute_subnetwork.platform.id
-  team       = local.project.team
-  env        = local.registry.environment
+  # Created by the baseline layer under this fixed name. Not looked up with a data source:
+  # the plan of a pull request must work before the baseline of that same change is applied.
+  snapshot_policy = "platform-daily"
+  team            = local.project.team
+  env             = local.registry.environment
 
   name           = each.key
   instance_count = each.value.count
