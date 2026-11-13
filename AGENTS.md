@@ -20,13 +20,15 @@ Responsibilities (see ADR 0001):
 bootstrap/                 central, MANUAL apply by a human: WIF, ci-plan/ci-apply SAs,
                            state bucket, impersonation grants per registered project
 platform/dev.yaml          registry: environment settings + registered team projects
-layers/10-baseline/        per project: APIs, VPC/subnet/NAT/IAP firewall, OS Login,
-                           snapshot policy          (runs once per project, matrix)
-layers/20-workload/        per project: VM groups from workload.yaml (runs once per project)
-(modules)                  live in the platform-modules repo, pinned here by tag (`?ref=vX.Y.Z`)
+platform/dev.yaml → layers  which layer versions this environment runs (ADR 0003):
+                           baseline = APIs, VPC/subnet/NAT/IAP firewall, OS Login, snapshot policy
+                           workload = VM groups from workload.yaml
+                           code in the repos platform-layer-baseline / platform-layer-workload,
+                           fetched by scripts/tf_layer.sh; the vm-group module is part of the workload layer repo
 workloads/<team>/<env>/workload.yaml   the only files app teams touch (CODEOWNERS)
 schema/                    workload.schema.json, environment.schema.json
-scripts/                   validate_workloads.py (friendly errors), changed_projects.py (matrix)
+scripts/                   validate_workloads.py (friendly errors), changed_projects.py (matrix),
+                           tf_layer.sh (fetch + run a layer), demo_reset.sh
 .github/workflows/         pr.yml (validate, scan, plan matrix, PR comment), apply.yml (main)
 docs/                      PLAN, STATUS, journal, decisions/, landing-zone-sim.md
 ```
@@ -56,7 +58,7 @@ yourself before any `gcloud`/`terraform` command (the Makefile does it for make 
    Never use `count` with list indexes for real resources.
 5. Every error shown to an app team names: file, field, bad value, allowed
    values, docs link. Never only a raw stack trace.
-6. Pin everything: `.tool-versions`, `required_providers`, modules by tag,
+6. Pin everything: `.tool-versions`, `required_providers`, layers by tag (`platform/dev.yaml`),
    GitHub Actions by full commit SHA.
 7. This is a generic, public demo.
 8. Walking skeleton: after each change the pipeline must still be green.
@@ -75,7 +77,7 @@ make fmt                                  terraform fmt -recursive
 make validate                             schemas + registry check + terraform validate
 make lint                                 tflint
 make scan                                 trivy config . + gitleaks
-make plan LAYER=20-workload PROJECT=shop-dev   init + plan -lock=false for one project
+make plan LAYER=workload PROJECT=shop-dev      fetch the pinned layer + plan -lock=false for one project
 make check                                fmt-check + validate + lint + scan (run before finishing)
 ```
 

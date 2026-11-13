@@ -5,7 +5,7 @@
   "description": "Registry of one environment: settings and the team projects the platform manages.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["apiVersion", "kind", "environment", "platformProject", "region", "stateBucket", "projects"],
+  "required": ["apiVersion", "kind", "environment", "platformProject", "region", "stateBucket", "layers", "projects"],
   "properties": {
     "apiVersion": { "const": "platform.demo/v1" },
     "kind": { "const": "Environment" },
@@ -13,6 +13,48 @@
     "platformProject": { "type": "string", "pattern": "^[a-z][a-z0-9-]{4,28}[a-z0-9]$" },
     "region": { "type": "string", "pattern": "^[a-z]+-[a-z]+[0-9]+$" },
     "stateBucket": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,61}[a-z0-9]$" },
+    "layers": {
+      "description": "Layer code this environment runs: one repo and one released tag per layer.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseline", "workload"],
+      "properties": {
+        "baseline": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "version"],
+          "properties": {
+            "source": {
+              "description": "a GitHub repository as owner/name",
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+            },
+            "version": {
+              "description": "a released tag such as v1.2.3 (never a branch)",
+              "type": "string",
+              "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+            }
+          }
+        },
+        "workload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "version"],
+          "properties": {
+            "source": {
+              "description": "a GitHub repository as owner/name",
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+            },
+            "version": {
+              "description": "a released tag such as v1.2.3 (never a branch)",
+              "type": "string",
+              "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+            }
+          }
+        }
+      }
+    },
     "projects": {
       "description": "Key = project key used by workloads. Renaming a key destroys and recreates its resources.",
       "type": "object",

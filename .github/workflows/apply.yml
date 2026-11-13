@@ -1,5 +1,5 @@
 # Apply pipeline: main is the desired state. Every registered project is applied,
-# baseline first, then workload. Terraform is idempotent: unchanged projects report "No changes".
+# baseline first, then workload, each layer at the version pinned in platform/dev.yaml. Terraform is idempotent: unchanged projects report "No changes".
 # Identity: ci-apply (write). Google only accepts this exact file on main
 # (WIF binding on workflow_ref, ADR 0002 #7) — do NOT rename or move this file.
 name: apply
@@ -9,7 +9,7 @@ on:
     branches: [main]
     paths:
       - platform/**
-      - layers/**
+      - scripts/tf_layer.sh
       - workloads/**
       - Makefile
       - .tool-versions
@@ -49,7 +49,7 @@ jobs:
         project: ${{ fromJSON(needs.projects.outputs.keys) }}
     # One apply at a time per project and layer; a running apply is never cancelled.
     concurrency:
-      group: apply-${{ matrix.project }}-10-baseline
+      group: apply-${{ matrix.project }}-baseline
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -67,14 +67,14 @@ jobs:
           PROJECT: ${{ matrix.project }}
         run: |
           set -o pipefail
-          make apply LAYER=10-baseline PROJECT="$PROJECT" 2>&1 | tee apply.txt
+          make apply LAYER=baseline PROJECT="$PROJECT" 2>&1 | tee apply.txt
       - name: Summary
         if: always()
         env:
           PROJECT: ${{ matrix.project }}
         run: |
           {
-            echo "### $PROJECT · 10-baseline"
+            echo "### $PROJECT · baseline"
             echo '```'
             grep -v 'Refreshing state\|Reading\.\.\.\|Read complete' apply.txt | tail -c 6000
             echo '```'
@@ -92,7 +92,7 @@ jobs:
       matrix:
         project: ${{ fromJSON(needs.projects.outputs.keys) }}
     concurrency:
-      group: apply-${{ matrix.project }}-20-workload
+      group: apply-${{ matrix.project }}-workload
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -110,14 +110,14 @@ jobs:
           PROJECT: ${{ matrix.project }}
         run: |
           set -o pipefail
-          make apply LAYER=20-workload PROJECT="$PROJECT" 2>&1 | tee apply.txt
+          make apply LAYER=workload PROJECT="$PROJECT" 2>&1 | tee apply.txt
       - name: Summary
         if: always()
         env:
           PROJECT: ${{ matrix.project }}
         run: |
           {
-            echo "### $PROJECT · 20-workload"
+            echo "### $PROJECT · workload"
             echo '```'
             grep -v 'Refreshing state\|Reading\.\.\.\|Read complete' apply.txt | tail -c 6000
             echo '```'

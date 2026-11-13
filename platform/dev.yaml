@@ -7,6 +7,15 @@ environment: dev
 platformProject: platform-project-dev-514319
 region: europe-west10
 stateBucket: platform-project-dev-514319-tfstate
+# Layer code lives in its own repos. This environment runs exactly these versions;
+# Renovate proposes new ones as pull requests, the plan comment shows the effect.
+layers:
+  baseline:
+    source: mofach90/platform-layer-baseline
+    version: v1.0.0
+  workload:
+    source: mofach90/platform-layer-workload
+    version: v1.0.0
 projects:
   shop-dev:                    # project key used by workloads (stable: it is a for_each key)
     projectId: shop-dev-7d94   # created by the landing zone (docs/landing-zone-sim.md)
