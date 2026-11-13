@@ -21,7 +21,7 @@ bootstrap/                 central, MANUAL apply by a human: WIF, ci-plan/ci-app
                            state bucket, impersonation grants per registered project
 platform/dev.yaml          registry: environment settings + registered team projects
 platform/dev.yaml → layers  which layer versions this environment runs (ADR 0003):
-                           baseline = APIs, VPC/subnet/NAT/IAP firewall, OS Login, snapshot policy
+                           baseline = project services, private network with NAT, IAP-only SSH, OS Login, snapshot policy
                            workload = VM groups from workload.yaml
                            code in the repos platform-layer-baseline / platform-layer-workload,
                            fetched by scripts/tf_layer.sh; the vm-group module is part of the workload layer repo
