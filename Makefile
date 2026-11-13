@@ -13,7 +13,7 @@ export GOOGLE_APPLICATION_CREDENTIALS ?= $(CLOUDSDK_CONFIG)/application_default_
 endif
 
 # Every directory that contains Terraform code.
-TF_DIRS := $(sort $(dir $(shell find bootstrap layers modules -name '*.tf' -not -path '*/.terraform/*' 2>/dev/null)))
+TF_DIRS := $(sort $(dir $(shell find bootstrap layers -name '*.tf' -not -path '*/.terraform/*' 2>/dev/null)))
 
 LAYER ?=
 PROJECT ?=

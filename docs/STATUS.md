@@ -1,6 +1,6 @@
 # STATUS
 
-**Last updated:** 2026-11-13, morning, Claude Code — fmt, validate, tflint, trivy, gitleaks pass
+**Last updated:** 2026-11-13, morning, Claude Code — platform-modules `make check` passes; platform-live cannot be validated until tag v1.0.0 exists
 **Talk:** Sat 14 Nov 2026, 10:00–10:45, DevFest Berlin, Room 3
 **Code freeze:** Thu 12 Nov, 12:00
 
@@ -35,19 +35,20 @@
 
 - Step 11 complete: job `scan` in `pr.yml` (tflint, trivy, gitleaks, pinned by version + sha256), green — PR #16.
 
+- Step 7 complete: daily snapshot schedule + boot-disk attachment, applied via CI — PR #17.
+
 ## In progress
-- Step 7 written, **not committed, not applied**: snapshot schedule `platform-daily` (daily 03:00 UTC, 7 days,
-  expires after disk deletion) in `layers/10-baseline`; `vm-group` attaches each boot disk to it by name
-  (separate attachment resource, VMs are not recreated). Local plans as planner: baseline 1 to add,
-  workload 2 to add, nothing replaced.
+- Step 8: platform-modules pushed and tagged `v1.0.0`, CI green; local plan of 20-workload with the pinned
+  module: **No changes**. platform-live side still uncommitted (source pin, `modules/` deleted).
+- Step 9 written in platform-modules, **not committed**: `release.yml`, `.releaserc.json`, `package.json` +
+  lock (semantic-release 25.0.9: tag + GitHub Release, no commit back). Local dry run finds `v1.0.0` and
+  reports "no release". Also ready as the first automatic release: output `machine_type` in vm-group (a `feat:`).
 - Backup video not recorded (step 13's second half).
 
 ## Next
-1. Human: PR with step 7 → merge → apply; done when the disks show the schedule and a second
-   plan of both layers says "No changes" (checks that the attachment causes no drift on the VM).
-2. Human: `make demo-reset` afterwards (rebuilds the demo branches on the new main), full rehearsal,
-   backup video. Plan counts changed: add-worker is now 9 to add (3 VMs, 3 attachments, 1 SA, 2 bindings).
-3. Step 8 (modules to `platform-modules`, pin by tag) only if the user wants it before the talk.
+1. Human: platform-live PR for step 8, merge, `make demo-reset`.
+2. Human: platform-modules two commits (`ci:` then `feat:`), push; done when tag `v1.1.0` + GitHub Release appear.
+3. Step 10: Renovate GitHub App + `renovate.json` in platform-live → PR "update vm-group to v1.1.0".
 
 ## Blocked / open questions
 - Decided: the first plan of a new state is run by a human at onboarding (`bootstrap/README.md`), because

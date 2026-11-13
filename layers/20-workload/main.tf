@@ -20,7 +20,8 @@ data "google_compute_subnetwork" "platform" {
 }
 
 module "vm_group" {
-  source   = "../../modules/vm-group"
+  # Released module, pinned by tag. Bump only through a pull request (plan shows the effect).
+  source   = "git::https://github.com/mofach90/platform-modules.git//modules/vm-group?ref=v1.0.0"
   for_each = local.vm_groups
 
   project_id = local.project.projectId
