@@ -1,6 +1,6 @@
 # STATUS
 
-**Last updated:** 2026-11-12, evening, Claude Code — `make scan` + validator pass; full `make check` last passed before step 13 (no Terraform change since)
+**Last updated:** 2026-11-13, Claude Code — workflow YAML parses; `make check` not re-run (no Terraform change)
 **Talk:** Sat 14 Nov 2026, 10:00–10:45, DevFest Berlin, Room 3
 **Code freeze:** Thu 12 Nov, 12:00
 
@@ -30,17 +30,19 @@
 - Step 6 complete: validator + workload schema + `workloads/README.md`; invalid PR #4 shows red `validate`
   with clear messages and merge is blocked — commits d97384a, 5ecd2ba.
 
+- Step 13 script complete: `make demo-reset` and `MODE=empty` both ran end to end (about 3 min each);
+  demo branches + draft PRs #6 (invalid) and #7 (rename) exist — PRs #5, #9, #12.
+
 ## In progress
-- Step 13 written, **not committed, never run**: `scripts/demo_reset.sh` (`make demo-reset`, `MODE=empty`
-  removes all VMs) and the demo states in `demo/*.yaml`. Reset goes through a PR + merge + apply, then
-  rebuilds `demo/add-worker` (branch only), `demo/invalid` and `demo/rename` (draft PRs).
-- Backup video not recorded.
+- Step 11 written, **not committed, never run**: job `scan` in `pr.yml` (tflint, trivy, gitleaks installed by
+  pinned version + sha256, then `make lint` and `make scan`). Not a required check, does not gate the plan.
+- Backup video not recorded (step 13's second half).
 
 ## Next
-1. Human: commit step 13 via PR, close PR #4 (replaced by `demo/invalid`), run `make demo-reset`,
-   then one full rehearsal: merge `demo/add-worker` → `make demo-reset` → time it (done when < 10 min).
-2. Human: record the backup video of the full demo script (PLAN §7).
-3. If time is left: step 11 (tflint, trivy, gitleaks in `pr.yml`), then step 7.
+1. Human: one PR with the `scan` job; done when `scan` is green on that PR.
+2. Human: Saturday routine — `make demo-reset` about 9:00, check VMs + draft PRs; record the backup video
+   before that (PLAN §7). After the talk: `make demo-reset MODE=empty`.
+3. Only if time is left: step 7 (snapshot policy). Steps 8–10, 12 are slides only.
 
 ## Blocked / open questions
 - Decided: the first plan of a new state is run by a human at onboarding (`bootstrap/README.md`), because

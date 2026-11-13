@@ -1,4 +1,4 @@
-# Pull request pipeline: validate → find changed projects → plan each one → one PR comment.
+# Pull request pipeline: validate + scan → find changed projects → plan each one → one PR comment.
 # Identity: ci-plan (read-only). It can read state and plan as planner@<team project>;
 # it can never change infrastructure or state.
 name: pr
@@ -31,6 +31,42 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
           terraform_wrapper: false
       - run: make fmt-check validate
+
+  # Lint and security scan, same commands as `make check` locally. Runs next to the plan and does
+  # not block it, so a reviewer sees the findings and the plan together.
+  scan:
+    runs-on: ubuntu-24.04
+    env:
+      # Keep the versions in sync with .tool-versions; the hashes are from each release's checksum file.
+      TFLINT_VERSION: "0.66.0"
+      TFLINT_SHA256: 22be11cadc25cd02401e94c0ccc91aa63467debb8485c2a755d98f4c0a9d1e2e
+      TRIVY_VERSION: "0.76.2"
+      TRIVY_SHA256: bc0fc726e017b8927a62b2d3531d7a84ee01769daf5c99ed866dced54089fdbf
+      GITLEAKS_VERSION: "8.30.1"
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0   # gitleaks scans the whole history
+      - name: Install tflint, trivy, gitleaks (pinned version + checksum)
+        run: |
+          set -euo pipefail
+          bin="$HOME/.local/bin"; mkdir -p "$bin"; cd "$(mktemp -d)"
+          get() { curl -fsSL --retry 3 -o "$1" "$2"; echo "$3  $1" | sha256sum --check --quiet; }
+          get tflint.zip "https://github.com/terraform-linters/tflint/releases/download/v$TFLINT_VERSION/tflint_linux_amd64.zip" "$TFLINT_SHA256"
+          get trivy.tgz "https://github.com/aquasecurity/trivy/releases/download/v$TRIVY_VERSION/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" "$TRIVY_SHA256"
+          get gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v$GITLEAKS_VERSION/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" "$GITLEAKS_SHA256"
+          unzip -q tflint.zip -d "$bin"
+          tar -xzf trivy.tgz -C "$bin" trivy
+          tar -xzf gitleaks.tgz -C "$bin" gitleaks
+          echo "$bin" >> "$GITHUB_PATH"
+      - name: make lint
+        env:
+          GITHUB_TOKEN: ${{ github.token }}   # tflint downloads its Google ruleset from GitHub
+        run: make lint
+      - name: make scan
+        if: always()
+        run: make scan
 
   changes:
     runs-on: ubuntu-24.04
