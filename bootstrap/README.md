@@ -38,11 +38,15 @@ Commit `backend.tf`.
 
 ## Onboarding a team project
 1. Landing zone creates the project (`docs/landing-zone-sim.md`).
-2. PR: add it to `platform/dev.yaml`.
-3. After the merge, a human runs `terraform apply` here (adds the two grants).
+2. PR: add it to `platform/dev.yaml`. Its plan jobs for the new project fail at first:
+   CI has no rights in that project yet.
+3. From the PR branch, a human runs `terraform apply` here. It adds exactly two grants
+   (ci-plan → `planner@`, ci-apply → `deployer@` of the new project).
 4. The same human runs `make plan LAYER=baseline PROJECT=<key>` and
    `make plan LAYER=workload PROJECT=<key>` once. The first plan of a new state
    creates an empty state file, and the PR identity (`ci-plan`) is read-only on the bucket.
+5. Re-run the failed PR checks (`gh run rerun --failed`), review the plans, merge.
+   The apply workflow then builds the baseline of the new project.
 
 ## Do not destroy
 A deleted workload identity pool stays soft-deleted for 30 days and its ID

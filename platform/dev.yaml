@@ -21,3 +21,7 @@ projects:
     projectId: shop-dev-7d94   # created by the landing zone (docs/landing-zone-sim.md)
     team: shop
     network: { cidr: 10.10.0.0/24 }
+  blog-dev:
+    projectId: blog-dev-b617
+    team: blog
+    network: { cidr: 10.10.1.0/24 }
