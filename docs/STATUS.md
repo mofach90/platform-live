@@ -1,6 +1,6 @@
 # STATUS
 
-**Last updated:** 2026-11-13, morning, Claude Code — platform-modules `make check` passes; platform-live cannot be validated until tag v1.0.0 exists
+**Last updated:** 2026-11-13, ~09:15, Claude Code — platform-live: fmt, validate, tflint, trivy, gitleaks pass; layer folders: fmt, validate, tflint, trivy pass (gitleaks needs `git init` first)
 **Talk:** Sat 14 Nov 2026, 10:00–10:45, DevFest Berlin, Room 3
 **Code freeze:** Thu 12 Nov, 12:00
 
@@ -37,18 +37,27 @@
 
 - Step 7 complete: daily snapshot schedule + boot-disk attachment, applied via CI — PR #17.
 
+- Step 8 complete: `vm-group` lives in platform-modules, pinned by tag — PR #18.
+- Step 9 complete: semantic-release in platform-modules; `feat:` commit produced `v1.1.0` + GitHub Release.
+
 ## In progress
-- Step 8: platform-modules pushed and tagged `v1.0.0`, CI green; local plan of 20-workload with the pinned
-  module: **No changes**. platform-live side still uncommitted (source pin, `modules/` deleted).
-- Step 9 written in platform-modules, **not committed**: `release.yml`, `.releaserc.json`, `package.json` +
-  lock (semantic-release 25.0.9: tag + GitHub Release, no commit back). Local dry run finds `v1.0.0` and
-  reports "no release". Also ready as the first automatic release: output `machine_type` in vm-group (a `feat:`).
-- Backup video not recorded (step 13's second half).
+- **Layers split into their own repos (ADR 0003), written, not committed, repos not created yet.**
+  - New workspace folders `../platform-layer-baseline`, `../platform-layer-workload`: layer code at the repo
+    root (inputs via `registry_file` / `workloads_dir`, empty `backend "gcs" {}`), Makefile, CI, semantic-release.
+    The `vm-group` module is a local folder inside the workload layer repo (ADR 0003 #8);
+    platform-modules is retired, not deleted.
+  - platform-live: `layers/` deleted; `platform/dev.yaml` has `layers.<name>.source/version` (both `v1.0.0`);
+    `scripts/tf_layer.sh` fetches the tag and runs Terraform; Makefile, matrix script, `apply.yml`, schema adapted.
+    Layer names are now `baseline` / `workload` (state keys unchanged).
+  - Verified locally with `LAYER_DIR=../platform-layer-<name> make plan …`: **No changes** for both layers.
+    Not verified: fetching the real tags (they do not exist yet), both workflows on GitHub.
+- Backup video not recorded.
 
 ## Next
-1. Human: platform-live PR for step 8, merge, `make demo-reset`.
-2. Human: platform-modules two commits (`ci:` then `feat:`), push; done when tag `v1.1.0` + GitHub Release appear.
-3. Step 10: Renovate GitHub App + `renovate.json` in platform-live → PR "update vm-group to v1.1.0".
+1. Human: create the two public repos, push, tag `v1.0.0` each; check their CI.
+2. Human: in platform-live `make plan LAYER=baseline|workload PROJECT=shop-dev` (pinned tags, must say
+   "No changes"), then PR + merge, `make demo-reset`, full rehearsal.
+3. Step 10: Renovate with a custom rule for `platform/dev.yaml` → PR "update platform-layer-… to v1.x".
 
 ## Blocked / open questions
 - Decided: the first plan of a new state is run by a human at onboarding (`bootstrap/README.md`), because
