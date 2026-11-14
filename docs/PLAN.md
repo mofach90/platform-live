@@ -111,12 +111,12 @@ rules in `scripts/validate_workloads.py`, (3) Terraform `validation`/`preconditi
 | 5 | `apply.yml`: main → baseline matrix → workload matrix; concurrency | merge creates VMs; IAP SSH works |
 | 6 | Friendly errors (schema + registry + path) | invalid PR shows clear red messages |
 | 7 | Snapshot policy "daily" in baseline + disk attachment in vm-group | disks show schedule |
-| 8 | Move modules to `platform-modules`, pin `?ref=v1.0.0` | plan "no changes" after move |
+| 8 | Move modules to `platform-modules`, pin `?ref=v1.0.0` — replaced on 13 Nov by ADR 0003: each layer in its own repo, pinned in `platform/dev.yaml`; `vm-group` inside the workload layer repo | plan "no changes" after move |
 | 9 | semantic-release (tag + GitHub Release, no commit back) | `feat:` merge → new tag |
-| 10 | Renovate GitHub App | PR "update vm-group to v1.1.0" appears |
+| 10 | Renovate GitHub App (custom rule for `platform/dev.yaml`) | PR "update platform-layer-workload to v1.1.0" appears |
 | 11 | Trivy + tflint + gitleaks in pr.yml | findings in PR |
 | 12 | Optional 2nd team project (`blog-dev`) to show matrix + isolation | 2 parallel plans |
-| 13 | Reset script (VMs only — never projects) + recorded backup video | dry run from reset < 10 min |
+| 13 | Reset script (VMs only — never projects); backup video dropped | dry run from reset < 10 min |
 
 Slides only ("how it grows up"): real landing zone / project factory, Shared VPC,
 separate workloads repo, prod.yaml + promotion PRs, pinned runner image,
@@ -142,15 +142,23 @@ gcloud services enable iam.googleapis.com iamcredentials.googleapis.com sts.goog
 Then `docs/landing-zone-sim.md`. Record every surprise in `docs/journal.md`.
 
 ## 7. Demo script
-0. Before the talk: PR "shop: add web group" merged → apply done. Second PR ready.
-1. **Who does what** slide → show `platform/dev.yaml` (registry), say "LZ created the project".
-2. **Happy path**: open PR adding a `worker` group → checks → plan comment
-   ("+3 to add") → merge → apply → console: VMs without external IP →
-   `gcloud compute ssh <vm> --tunnel-through-iap --zone <zone>`.
-3. **Invalid config** (branch ready): `project: payments-dev` (not registered),
-   `size: huge`, `count: 50`, file in wrong folder → one clear message each.
-4. **Rename trap** (bonus): `web` → `frontend` → plan shows destroy + create.
-5. **Bots** (30 s): Renovate PR + GitHub Release from semantic-release.
+0. Before the talk (about 09:00): `make demo-reset`; check 2 shop VMs + 1 blog VM, the two draft PRs
+   and the open Renovate PR; open them in browser tabs.
+1. **Who does what** slide → show `platform/dev.yaml`: two registered projects and the pinned
+   layer versions; say "the landing zone created the projects".
+2. **Happy path**: `gh pr create --head demo/add-worker --base main --fill` → checks → plan comment
+   (`shop-dev-workload`: 9 to add = 3 VMs, 3 disk attachments, 1 service account, 2 role bindings)
+   → merge → apply → console: VMs without external IP →
+   `gcloud compute ssh shop-worker-01 --tunnel-through-iap --zone europe-west10-a --project shop-dev-7d94`.
+3. **Invalid config** (draft PR `demo/invalid`): `project: payments-dev` (not registered),
+   `size: huge`, `count: 50`, file in the wrong folder → four clear messages, merge blocked.
+4. **Rename trap** (draft PR `demo/rename`): `web` → `frontend` → plan shows 7 to destroy, 7 to add.
+5. **Versioned layers + bot**: GitHub Release `v1.1.0` in `platform-layer-workload` → the Renovate PR in
+   platform-live (one line in `dev.yaml`) → four plans, one per project and layer → merge → the apply
+   rolls the layer out to both projects. Its plan comment is from before step 2; after step 2 the
+   shop project has 5 VMs to label, not 2.
+No backup video (decision of the presenter). Fallback if GitHub is slow: show the merged PRs #19
+(layer split, "No changes") and #22 (onboarding) with their plan comments, and the last apply run.
 
 
 ## 8. Patterns
