@@ -8,3 +8,7 @@ spec:
       count: 2            # 1..5
       size: small         # small | medium | large
       image: debian-12    # allow-list
+    - name: worker
+      count: 3
+      size: small
+      image: debian-12
