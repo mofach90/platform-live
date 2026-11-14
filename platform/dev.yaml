@@ -15,7 +15,7 @@ layers:
     version: v1.0.0
   workload:
     source: mofach90/platform-layer-workload
-    version: v1.0.0
+    version: v1.1.1
 projects:
   shop-dev:                    # project key used by workloads (stable: it is a for_each key)
     projectId: shop-dev-7d94   # created by the landing zone (docs/landing-zone-sim.md)
