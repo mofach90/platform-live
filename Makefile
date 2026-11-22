@@ -21,7 +21,7 @@ PROJECT ?=
 # `make apply` always uses deployer.
 IDENTITY ?= planner
 
-.PHONY: help fmt fmt-check validate lint scan plan apply demo-reset check
+.PHONY: help fmt fmt-check validate lint scan plan apply demo-reset pause check
 
 help: ## list targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  %-10s %s\n", $$1, $$2}'
@@ -56,5 +56,8 @@ apply: ## apply as deployer; CI runs this on main, a human only for a first appl
 
 demo-reset: ## demo back to its start state through the pipeline (MODE=empty removes all VMs)
 	@scripts/demo_reset.sh $(or $(MODE),start)
+
+pause: ## stop paying between sessions: make pause STEP=status|pause|teardown|resume
+	@scripts/platform_pause.sh $(or $(STEP),status)
 
 check: fmt-check validate lint scan ## run before finishing (same as CI)

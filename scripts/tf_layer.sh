@@ -2,7 +2,7 @@
 # Run one layer for one project: fetch the layer code at the version pinned in the
 # registry, then terraform init + plan/apply with one state per project.
 #
-# Usage: scripts/tf_layer.sh <plan|apply> <layer> <project key> [planner|deployer]
+# Usage: scripts/tf_layer.sh <plan|apply|destroy> <layer> <project key> [planner|deployer]
 #        (normally through: make plan / make apply)
 #
 # The layer code lives in its own repo. platform/dev.yaml says which version this
@@ -19,7 +19,8 @@ DOCS=https://github.com/mofach90/platform-live/blob/main/docs/decisions/0003-lay
 action="${1:-}"; layer="${2:-}"; project="${3:-}"; identity="${4:-planner}"
 case "$action" in
   plan | apply) ;;
-  *) echo "usage: $0 <plan|apply> <layer> <project key> [planner|deployer]" >&2; exit 2 ;;
+  destroy) [ -z "${CI:-}" ] || { echo "tf_layer: destroy is for a human only, never in CI" >&2; exit 2; } ;;
+  *) echo "usage: $0 <plan|apply|destroy> <layer> <project key> [planner|deployer]" >&2; exit 2 ;;
 esac
 cd "$(git rev-parse --show-toplevel)"
 
@@ -36,7 +37,7 @@ if [ -z "$layer" ] || [ -z "$source" ] || [ -z "$version" ]; then
 fi
 
 if [ -n "${LAYER_DIR:-}" ]; then
-  [ "$action" = plan ] || { echo "tf_layer: LAYER_DIR is for plans only; apply always uses the pinned version." >&2; exit 2; }
+  [ "$action" = plan ] || { echo "tf_layer: LAYER_DIR is for plans only; apply and destroy always use the pinned version." >&2; exit 2; }
   dir="$LAYER_DIR"
   # Keep Terraform's working files here, so the layer checkout stays untouched.
   export TF_DATA_DIR="$PWD/.layers/_local/$layer"
@@ -69,6 +70,9 @@ terraform -chdir="$dir" init -reconfigure -input=false \
 
 if [ "$action" = plan ]; then
   TF_VAR_identity="$identity" terraform -chdir="$dir" plan -lock=false -input=false
+elif [ "$action" = destroy ]; then
+  # Human only (scripts/platform_pause.sh teardown); Terraform asks for "yes".
+  TF_VAR_identity=deployer terraform -chdir="$dir" destroy
 else
   # Auto-approve only in CI; a human is asked for "yes".
   TF_VAR_identity=deployer terraform -chdir="$dir" apply ${CI:+-input=false -auto-approve}
